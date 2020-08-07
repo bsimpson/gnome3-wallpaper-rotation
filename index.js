@@ -4,6 +4,7 @@ const { spawnSync } = require( 'child_process' );
 const fs = require('fs');
 const { URL } = require('url');
 const https = require('https');
+const wallpaper = require('wallpaper');
 
 // Feel free to change these configuration options
 const SUBREDDIT_URL = 'https://www.reddit.com/r/WidescreenWallpaper.json';
@@ -100,7 +101,11 @@ function saveImage(imageUrl) {
 function setWallpaper(pathToWallpaper) {
   return new Promise((resolve, reject) => {
     console.log(`Setting image ${pathToWallpaper}`);
-    spawnSync( 'gsettings', [ 'set', 'org.gnome.desktop.background', 'picture-uri', `file:///${pathToWallpaper}` ] );
+    if (process.platform === 'linux') {
+      spawnSync( 'gsettings', [ 'set', 'org.gnome.desktop.background', 'picture-uri', `file:///${wallpaperPath}` ] );
+    } else {
+      wallpaper.set(wallpaperPath);
+    }
     resolve(pathToWallpaper);
   });
 }

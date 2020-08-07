@@ -1,5 +1,5 @@
 {
-  "name": "wallpaper",
+  "name": "gnome3-wallpaper-rotation",
   "version": "1.0.0",
   "description": "Fetches a wallpaper image from r/WidescreenWallpaper",
   "main": "index.js",
@@ -9,5 +9,7 @@
   },
   "author": "Ben Simpson",
   "license": "ISC",
-  "dependencies": {}
+  "dependencies": {
+    "wallpaper": "^4.4.1"
+  }
 }
