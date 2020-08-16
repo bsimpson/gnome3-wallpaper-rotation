@@ -26,9 +26,13 @@ function getImageList() {
       res.on('end', () => {
         console.log('Got list of images');
         str = JSON.parse(str);
-        resolve(str.data.children.map((child) => {
-          return child.data.url_overridden_by_dest;
-        })[0]);
+        resolve(
+          str.data.children.map((child) => {
+            return child.data.url;
+          }).find(url => {
+            return url.match(/(jpe?g|png)$/)
+          })
+        );
       });
     });
   })
