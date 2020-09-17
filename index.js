@@ -8,16 +8,59 @@ const https = require('https');
 // Feel free to change these configuration options
 const SUBREDDIT_URL = 'https://www.reddit.com/r/WidescreenWallpaper.json';
 const DOWNLOAD_PATH = `/home/${process.env.USER}/Pictures/Wallpapers`;
+const CONFIG_FILE = `${DOWNLOAD_PATH}/entries.txt`;
 
-console.log('Starting background changer');
+(function() {
+  const args = process.argv.slice(2);
+  switch(args[0]) {
+    case '--prev':
+      setToPrevious(args[1]);
+      break;
+    case '--help':
+      showHelp();
+      break;
+    default:
+      setNewImage();
+  }
+}());
 
-getImageList()
-.then(saveImage)
-.then(setWallpaper)
-.catch(console.error);
+function showHelp() {
+  console.log(`
+    NAME
+      Gnome3 wallpaper changer
+
+    SYNOPSIS
+      node /path/to/index.js [OPTION]
+
+    DESCRIPTION
+      Sets the wallpaper to the top image on r/WidescreenWallpaper
+    
+      --prev [STEP]
+        Set the wallpaper back to the previous and skip current
+      
+      --help 
+        Show this help
+  `);
+}
+
+function setToPrevious(step = 1) {
+  getPreviousEntry(parseInt(step))
+    .then(setWallpaper)
+    .catch(console.error);
+}
+
+function setNewImage() {
+  getImageList()
+  .then(saveImage)
+  .then(createEntry)
+  .then(setWallpaper)
+  .catch(console.error);
+}
 
 
 function getImageList() {
+  console.log('Starting background changer');
+
   return new Promise((resolve, reject) => {
     https.get(SUBREDDIT_URL, (res) => {
       let str = '';
@@ -54,10 +97,45 @@ function saveImage(imageUrl) {
   });
 }
 
-function setWallpaper(pathTowallpaper) {
+function setWallpaper(pathToWallpaper) {
   return new Promise((resolve, reject) => {
-    console.log(`Setting image ${pathTowallpaper}`);
-    spawnSync( 'gsettings', [ 'set', 'org.gnome.desktop.background', 'picture-uri', `file:///${pathTowallpaper}` ] );
-    resolve();
+    console.log(`Setting image ${pathToWallpaper}`);
+    spawnSync( 'gsettings', [ 'set', 'org.gnome.desktop.background', 'picture-uri', `file:///${pathToWallpaper}` ] );
+    resolve(pathToWallpaper);
+  });
+}
+
+function createEntry(entry) {
+  return new Promise((resolve, reject) => {
+    fs.readFile(CONFIG_FILE, 'utf8', (err, data) => {
+      data = data || '';
+
+      const dataArray = data.split('\n').filter(entry => entry); // strip trailing newline
+      const lastEntry = dataArray.pop(); // last entry
+      
+      console.log({lastEntry})
+      console.log({entry})
+      if (lastEntry !== entry) {
+        fs.appendFile(CONFIG_FILE, `${entry}\n`, function (err) {
+          if (err) reject(err);
+          resolve(entry);
+        });
+      } else {
+        reject('Image is a repeat');
+      }
+    });
+  })
+}
+
+function getPreviousEntry(step) {
+  console.log({step})
+  return new Promise((resolve, reject) => {
+    fs.readFile(CONFIG_FILE, 'utf8', (err, data) => {
+      if (err) reject(err);
+  
+      const dataArray = data.split('\n').filter(entry => entry); // strip trailing newline
+      console.log(data);
+      resolve(dataArray[dataArray.length - (step + 1)]);
+    });
   });
 }
