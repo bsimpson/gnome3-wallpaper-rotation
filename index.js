@@ -113,8 +113,6 @@ function createEntry(entry) {
       const dataArray = data.split('\n').filter(entry => entry); // strip trailing newline
       const lastEntry = dataArray.pop(); // last entry
       
-      console.log({lastEntry})
-      console.log({entry})
       if (lastEntry !== entry) {
         fs.appendFile(CONFIG_FILE, `${entry}\n`, function (err) {
           if (err) reject(err);
@@ -128,13 +126,11 @@ function createEntry(entry) {
 }
 
 function getPreviousEntry(step) {
-  console.log({step})
   return new Promise((resolve, reject) => {
     fs.readFile(CONFIG_FILE, 'utf8', (err, data) => {
       if (err) reject(err);
   
       const dataArray = data.split('\n').filter(entry => entry); // strip trailing newline
-      console.log(data);
       resolve(dataArray[dataArray.length - (step + 1)]);
     });
   });
