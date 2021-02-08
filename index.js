@@ -34,11 +34,11 @@ function showHelp() {
 
     DESCRIPTION
       Sets the wallpaper to the top image on r/WidescreenWallpaper
-    
+
       --prev [STEP]
         Set the wallpaper back to the previous and skip current
-      
-      --help 
+
+      --help
         Show this help
   `);
 }
@@ -87,12 +87,18 @@ function saveImage(imageUrl) {
     https.get(imageUrl, (res) => {
       const filename = imageUrl.split('/').slice(-1)[0];
       const wallpaperPath = `${DOWNLOAD_PATH}/${filename}`;
-      const fileStream = fs.createWriteStream(wallpaperPath);
-      res.pipe(fileStream);
 
-      fileStream.on('finish', () => {
-        fileStream.close(resolve(wallpaperPath));
-      });
+      fs.access(wallpaperPath, fs.F_OK, (err) => {
+        if (err) {
+          console.log(`File does not exist - creating`);
+          const fileStream = fs.createWriteStream(wallpaperPath);
+          res.pipe(fileStream);
+
+          fileStream.on('finish', () => {
+            fileStream.close(resolve(wallpaperPath));
+          });
+        }
+      })
     });
   });
 }
@@ -100,7 +106,12 @@ function saveImage(imageUrl) {
 function setWallpaper(pathToWallpaper) {
   return new Promise((resolve, reject) => {
     console.log(`Setting image ${pathToWallpaper}`);
-    spawnSync( 'gsettings', [ 'set', 'org.gnome.desktop.background', 'picture-uri', `file:///${pathToWallpaper}` ] );
+    const currentUriCmd = spawnSync( 'gsettings', [ 'get', 'org.gnome.desktop.background', 'picture-uri'] );
+    const currentUri = currentUriCmd.stdout.toString().trim();
+    const newUri = `'file:///${pathToWallpaper}'`;
+    if (currentUri !== newUri) {
+      spawnSync( 'gsettings', [ 'set', 'org.gnome.desktop.background', 'picture-uri', newUri ] );
+    }
     resolve(pathToWallpaper);
   });
 }
@@ -112,7 +123,7 @@ function createEntry(entry) {
 
       const dataArray = data.split('\n').filter(entry => entry); // strip trailing newline
       const lastEntry = dataArray.pop(); // last entry
-      
+
       if (lastEntry !== entry) {
         fs.appendFile(CONFIG_FILE, `${entry}\n`, function (err) {
           if (err) reject(err);

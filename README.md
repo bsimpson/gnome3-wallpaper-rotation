@@ -17,6 +17,11 @@ cd gnome3-wallpaper-rotation
 npm install
 ```
 
+To see all options run:
+```
+node index.js --help
+```
+
 # Schedule rotation
 Put following entry in your crontab to change wallpaper hourly:
 
