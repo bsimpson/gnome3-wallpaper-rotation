@@ -70,7 +70,8 @@ function getImageList() {
         console.log('Got list of images');
         str = JSON.parse(str);
         resolve(
-          str.data.children.map((child) => {
+          // we slice here because if the subreddit sets a banner it is always child 0
+          str.data.children.slice(1).map((child) => {
             return child.data.url;
           }).find(url => {
             return url.match(/(jpe?g|png)$/)
